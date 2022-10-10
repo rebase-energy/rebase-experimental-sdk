@@ -23,26 +23,17 @@ def train(train_set, params):
     ]
 
 
-@node(inputs=['model', 'val_x'], outputs='inference')
+@node(inputs=['model', 'val_x'], outputs='result')
 def predict(model, val_x):
-    print("val_x")
-    print(val_x)
-    result = model.predict(val_x)
-    print(result)
-    print("model here", model)
-    df = val_x
-    df['target'] = result
-    return df
+    val_x['target'] = model.predict(val_x)
+    return val_x
 
 pipelines = dict(
     train=[train],
     infer=[predict]
 )
 
-#pipelines = [train]
 mc = ModelChain(pipelines)
-
-#mc.run()
 
 dwd_ds = Dataset(
     'DWD_ICON-EU',
@@ -70,7 +61,6 @@ train_inputs = {
 
 result = mc.train(train_inputs)
 
-print("model", result['model'])
 dwd_ds_latest = Dataset(
     'DWD_ICON-EU',
      meta={'lat': 51, 'lon': 7}, 
@@ -84,6 +74,6 @@ predict_inputs = {
 }
 
 result = mc.infer(predict_inputs)
-df = result['inference']
+df = result['result']
 print(df)
 

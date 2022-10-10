@@ -1,8 +1,11 @@
+import importlib
 import kedro
 from kedro.io import DataCatalog
 from kedro.io.core import AbstractDataSet
 from kedro.io import MemoryDataSet
+from kedro.extras.datasets.pickle import PickleDataSet
 from kedro.runner.sequential_runner import SequentialRunner
+from rebase.util import install_repo
 
 
 # class Pipeline():
@@ -28,7 +31,10 @@ from kedro.runner.sequential_runner import SequentialRunner
 def make_data_catalog(data):
   for key in data:
     if not isinstance(data[key], AbstractDataSet):
-      data[key] = MemoryDataSet(data[key])
+      #data[key] = MemoryDataSet(data[key])
+      value = data[key]
+      data[key] = PickleDataSet(filepath=f"./cache/{key}")
+      data[key].save(value)
   return DataCatalog(data)
     
 
@@ -57,11 +63,35 @@ def pipeline(nodes, mc):
 
 class ModelChain():
 
+  installed = False
 
-  def __init__(self, pipelines):
+  repo_name = None
+
+  def __init__(self, pipelines_or_repo):
     #self.data_catalog = DataCatalog(data)
+    if type(pipelines_or_repo) is str:
+      self.repo_name = pipelines_or_repo
+    else:
+      self._init_pipelines(pipelines_or_repo)
 
-    for key in pipelines:
-      setattr(self, key, pipeline(pipelines[key], self))
+
+  @classmethod
+  def from_local_module(module_name="src"):
+      module = importlib.import_module(module_name)
+      func = getattr(module, 'init')
+      return ModelChain(func())
+
+
+  def install(self):
+      install_repo(self.repo_name)
+      ModelChain.from_local_module()
+
+
+  
+  def _init_pipelines(self, pipelines):
+      for key in pipelines:
+        setattr(self, key, pipeline(pipelines[key], self))
+      
+      self.installed = True
       
 

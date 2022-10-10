@@ -1,3 +1,5 @@
+import subprocess
+import logging
 
 class InvalidMergeMethod(Exception):
     pass
@@ -20,3 +22,13 @@ def merge(df1, df2, method):
         return func(df1, df2)
     except KeyError:
         raise InvalidMergeMethod
+
+
+
+
+def install_repo(name):
+    #url = f"~/Github/{name}"
+    logging.info(f"Installing {name}")
+    url = f"git+ssh://git@github.com/{name}.git"
+    subprocess.run(['pip', 'install', url])
+    logging.info(f"{name} has been installed")
