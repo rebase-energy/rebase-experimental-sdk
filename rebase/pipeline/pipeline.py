@@ -74,18 +74,21 @@ class ModelChain():
     else:
       self._init_pipelines(pipelines_or_repo)
 
+  @classmethod
+  def _import(cls, module_name="src"):
+      module = importlib.import_module(module_name)
+      return getattr(module, 'init')
 
   @classmethod
-  def from_local_module(module_name="src"):
-      module = importlib.import_module(module_name)
-      func = getattr(module, 'init')
+  def from_local_module(cls):
+      func = ModelChain._import()
       return ModelChain(func())
 
 
   def install(self):
       install_repo(self.repo_name)
-      ModelChain.from_local_module()
-
+      func = ModelChain._import()
+      self._init_pipelines(func())
 
   
   def _init_pipelines(self, pipelines):
