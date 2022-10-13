@@ -10,7 +10,7 @@ class DynamicProvider(APIDataSet):
 
   base_url = 'https://dev-api.rebase.energy'
 
-  def __init__(self, name, meta, features, start_date, end_date):
+  def __init__(self, name, meta={}, features=[], start_date=None, end_date=None, options={}):
     super().__init__(
         url=f"{self.base_url}/weather/v2/query",
         params={
@@ -21,6 +21,7 @@ class DynamicProvider(APIDataSet):
           'longitude': meta['lon'],
           'variables': ','.join(features),
           'output-format': 'json',
+          **options,
       },
       headers={
         'Authorization': os.environ.get('RB_API_KEY')
@@ -62,7 +63,8 @@ class Dataset(AbstractDataSet):
         start_date=None,
         end_date=None,
         indexes={},
-        features=[]
+        features=[],
+        options={}
     ):
         self.name = name
         self.indexes = indexes
@@ -72,7 +74,7 @@ class Dataset(AbstractDataSet):
         if '.' in name:
             self.provider = LocalProvider(name)
         else:
-            self.provider = DynamicProvider(name, meta, features, start_date, end_date)
+            self.provider = DynamicProvider(name, meta, features, start_date, end_date, options)
 
 
     def _load(self):
